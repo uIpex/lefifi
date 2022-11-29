@@ -66,10 +66,10 @@ module.exports = {
               if (channel.type === 0 || channel.type === 11) {
                 // Make the bot only available on one certain category
                 if (
-                  channel.parentId == "954971803837677590" ||
+                  channel.parentId == "961351829172670504" ||
                   (channel.type === 11 &&
                     client.channels.cache.get(channel.parentId).parentId ==
-                      "954971803837677590")
+                      "961351829172670504")
                 ) {
                   // Takes both the channel id and message id of the latest message of each channel
                   channel.messages
@@ -91,10 +91,10 @@ module.exports = {
                           Paradis.channels.cache.filter(
                             (c) =>
                               ((c.type === 0 || c.type === 11) &&
-                                c.parentId == "954971803837677590") ||
+                                c.parentId == "961351829172670504") ||
                               (c.type === 11 &&
                                 Paradis.channels.cache.get(c.parentId)
-                                  .parentId == "954971803837677590")
+                                  .parentId == "961351829172670504")
                           ).size
                         ) {
                           resolve();
@@ -238,6 +238,7 @@ module.exports = {
         ); // Hours left
         setTimeout(() => {
           // Reset messageTiming.json for next time
+          console.log(messageTiming.timeStarted === 0, timeTomorrow - timeStarted > 0)
           messageTiming = {
             timeStarted: 0,
             timeTomorrow: 0,

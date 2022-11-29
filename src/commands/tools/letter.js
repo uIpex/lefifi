@@ -1,5 +1,3 @@
-require('dotenv').config();
-
 const { SlashCommandBuilder } = require('discord.js');
 const fs = require("fs");
 
@@ -18,6 +16,8 @@ module.exports = {
         const Ipex = await client.users.fetch('954903709689716766');
 
         if (interaction.user === Zia || interaction.user === Ipex) {
+            process.env[interaction.user === Zia ? 'zias_message' : 'ipexs_message'] = interaction.options.getString('text');
+          
             fs.writeFileSync(
               ".env",
               `token=${process.env.token}\n` +
@@ -27,7 +27,6 @@ module.exports = {
 
             await interaction.reply({
                 content: `<:AiTeehee:1044848286588207174>  Will be passing on the letter to ${interaction.user.id === '854427265353515039' ? 'Pexxie~' : 'Ziza~'} TYTYY!!`,
-                // files: ["https://cdn.discordapp.com/emojis/725265535306170420.webp?size=48&quality=lossless"],
                 ephemeral: true
             });
 

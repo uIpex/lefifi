@@ -14,11 +14,12 @@ module.exports = {
         if (!(channel.type === 0 || channel.type === 11)) return; // Only search thru text channels and threads
         // Make the bot only available on one certain category
         if (
-          channel.parentId == "954971803837677590" ||
+          channel.parentId == "961351829172670504" ||
           (channel.type === 11 &&
             client.channels.cache.get(channel.parentId).parentId ==
-              "954971803837677590")
+              "961351829172670504")
         ) {
+          if (channel.id === "957629919695876207") return;
           // Takes EVERY single message from Zia of each channel
           function findMessages(messageBefore) {
             // Starts off as null. 'messageBefore' is the latest message found. Used to search behind it
@@ -48,6 +49,7 @@ module.exports = {
                       Attachments: [...m.attachments.values()],
                       Sticker: [...m.stickers.values()],
                     });
+                    console.log(ziaMessages.length);
                   });
 
                   findMessages(messages.last().id); // Loop till channel is dried out
@@ -59,10 +61,10 @@ module.exports = {
                     Paradis.channels.cache.filter(
                       (c) =>
                         ((c.type === 0 || c.type === 11) &&
-                          c.parentId == "954971803837677590") ||
+                          c.parentId == "961351829172670504") ||
                         (c.type === 11 &&
                           Paradis.channels.cache.get(c.parentId).parentId ==
-                            "954971803837677590")
+                            "961351829172670504")
                     ).size
                   ) resolve();
                 }
