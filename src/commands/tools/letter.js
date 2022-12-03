@@ -10,7 +10,16 @@ module.exports = {
         .addStringOption(option =>
             option.setName('text')
                 .setDescription('Secret')
-                .setRequired(true)),
+                .setRequired(true))
+        .addAttachmentOption(option =>
+            option.setName('image')
+                .setDescription('FIRST'))
+        .addAttachmentOption(option =>
+            option.setName('images')
+                .setDescription('SECODN'))
+        .addAttachmentOption(option =>
+            option.setName('imagess')
+                .setDescription('THIRDDD')),
     async execute(interaction, client) {
         const Zia = await client.users.fetch('854427265353515039');
         const Ipex = await client.users.fetch('954903709689716766');
@@ -32,7 +41,6 @@ module.exports = {
 
             if (interaction.user === Zia) {
                 Ipex.send(`${hearts[Math.floor(Math.random() * hearts.length)]} Ziza just wrote a new message~ Quicklyquickly, open ittt <3`)
-                    .then(message => console.log(`Sent message: ${message.content}`))
                     .catch(console.error);
             } else {
                 Zia.send(`${hearts[Math.floor(Math.random() * hearts.length)]} Pexxie just wrote a new message~ Quicklyquickly, open ittt <3`)

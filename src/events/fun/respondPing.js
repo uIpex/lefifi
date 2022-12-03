@@ -13,8 +13,8 @@ module.exports = {
   async execute(message, client, guildID) {
     const Paradis = client.guilds.cache.get(guildID);
 
-    // If the message has bot mention and is not by the bot
-    if (message.mentions.has(Paradis.members.me.user) && !message.author.bot) {
+    // If the message is in DMs or has bot mention and is not by the bot
+    if ((message.channel.isDMBased() && !message.author.bot) || (message.mentions.has(client.user) && !message.author.bot)) {
       // Emotion Functions List
       async function Respond() {
         // Read ziaMessages.json
@@ -24,7 +24,7 @@ module.exports = {
 
         console.log("_ Found", ziaMessages.length, "messages to copy");
 
-        let firstMessage = true;
+        let firstMessage = message.channel.isDMBased() ? false : true;
         // Checks if ziaMessages exists
         if (ziaMessages.length > 1) {
           console.log(
@@ -32,44 +32,45 @@ module.exports = {
           );
 
           // Decide a random message to then send
-          function sendMessage(randomNumber) {
+          async function sendMessage(randomNumber) {
             const randomText = ziaMessages[randomNumber].Content;
             const randomAttachment = ziaMessages[randomNumber].Attachments;
-            const randomSticker = ziaMessages[randomNumber].Sticker;
+
+            // Leave the sticker out if it's external
+            let randomSticker;
+            if (ziaMessages[randomNumber].Sticker[0]) {
+              const sticker = await client.fetchSticker(ziaMessages[randomNumber].Sticker[0].id);
+
+              if (sticker.guildId === guildID)
+                randomSticker = ziaMessages[randomNumber].Sticker;
+            }
 
             // Checks if the random message exists. If not, look for another message
-            if (
-              randomText ||
-              randomAttachment.length > 0 ||
-              randomSticker.length > 0
-            ) {
+            if (randomText || randomAttachment.length > 0 || randomSticker) {
               console.log(
-                `${randomText || null}\nAttachments: ${randomAttachment.map(
-                  (msg) => msg.attachment
-                )}\nSticker:`,
-                randomSticker[0]
-                  ? `${randomSticker[0].name}:${randomSticker[0].id}\n`
-                  : "\n"
+                `${randomText || null}\n`,
+                `Attachments: ${randomAttachment.map((msg) => msg.attachment)}\n`,
+                `Sticker:`, randomSticker ? `${randomSticker[0].name}:${randomSticker[0].id}\n` : "\n"
               );
 
               // If it's the first message, reply
               if (firstMessage) {
                 message
                   .reply({
-                    content: randomText.toString(),
+                    content: randomText,
                     files: randomAttachment,
                     stickers: randomSticker,
                   })
                   .catch((error) => {
                     message.channel.send({
-                      content: randomText.toString(),
+                      content: randomText,
                       files: randomAttachment,
                       stickers: randomSticker,
                     });
                   });
               } else {
                 message.channel.send({
-                  content: randomText.toString(),
+                  content: randomText,
                   files: randomAttachment,
                   stickers: randomSticker,
                 });
@@ -165,11 +166,10 @@ module.exports = {
         }
       }, 1 * 1000);
     } else if (message.author.id === "954903709689716766") {
-      if (Math.floor(Math.random() * 101) === 1) {
+      if (Math.floor(Math.random() * 301) === 1) {
         message.reply(
           loveMessages[Math.floor(Math.random() * loveMessages.length)]
-        );
-      }
+        )};
     }
   },
 };

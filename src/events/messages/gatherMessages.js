@@ -1,36 +1,39 @@
 const fs = require("fs");
 
-let ziaMessages = [false]; // List to store ALL of Zia's texts, attachments, & stickers (Used to mimic Zia)
+let ziaMessages = []; // List to store ALL of Zia's texts, attachments, & stickers (Used to mimic Zia)
+
+const ignoreChannels = ['957629919695876207', '985374396879360091'];
 
 module.exports = {
   name: "ready",
   once: true,
-  async execute(_, client, guildID, userID) {
+  async execute(_, client, guildID, userID, categoryID) {
     const Paradis = client.guilds.cache.get(guildID);
+    const channels = Paradis.channels.cache.filter(c => {
+      // Ignore blacklisted channels
+      if (ignoreChannels.filter(id => id === c.id).length === 0) {
+        // Only search thru text channels and threads in a specific category
+        return (c.isTextBased() && c.parentId === categoryID) || 
+        (c.isThread() && Paradis.channels.cache.get(c.parentId).parentId === categoryID)};
+    });
 
-    const gatherMessages = new Promise((resolve) => {
-      let channelCount = 0;
-      Paradis.channels.cache.forEach(async (channel) => {
-        if (!(channel.type === 0 || channel.type === 11)) return; // Only search thru text channels and threads
-        // Make the bot only available on one certain category
-        if (
-          channel.parentId == "961351829172670504" ||
-          (channel.type === 11 &&
-            client.channels.cache.get(channel.parentId).parentId ==
-              "961351829172670504")
-        ) {
-          if (channel.id === "957629919695876207") return;
+    let channelsChecked = 0;
+    let channelCount = channels.size;
+
+    const gatherMessages = new Promise(async (resolve) => {
+      channels.forEach(async (channel) => {
           // Takes EVERY single message from Zia of each channel
-          function findMessages(messageBefore) {
-            // Starts off as null. 'messageBefore' is the latest message found. Used to search behind it
-            channel.messages
+          function findMessages(thread, messageBefore) {
+            let source = thread || channel;
+            source.messages
               .fetch({
                 limit: 100,
+                // Starts off as null. 'messageBefore' is the latest message found. Used to search beyond 100 messages
                 before: messageBefore,
               })
               .then((messages) => {
                 // Continue listing Zia's texts till it's taken ALL the messages in a single channel
-                if (Array.from(messages).length > 0) {
+                if (messages.size > 0) {
                   // Filters to only only Zia's texts
                   const msgs = messages.filter((m) => m.author.id === userID || m.author.id === "667361776362323978");
 
@@ -49,30 +52,24 @@ module.exports = {
                       Attachments: [...m.attachments.values()],
                       Sticker: [...m.stickers.values()],
                     });
-                    console.log(ziaMessages.length);
                   });
 
-                  findMessages(messages.last().id); // Loop till channel is dried out
+                  findMessages(thread, messages.last().id); // Loop till channel is dried out
                 } else {
-                  channelCount++; // +1 the counter
-                  // End once it's the last channel
-                  if (
-                    channelCount ===
-                    Paradis.channels.cache.filter(
-                      (c) =>
-                        ((c.type === 0 || c.type === 11) &&
-                          c.parentId == "961351829172670504") ||
-                        (c.type === 11 &&
-                          Paradis.channels.cache.get(c.parentId).parentId ==
-                            "961351829172670504")
-                    ).size
-                  ) resolve();
+                  channelsChecked++; // Finished checking another channel
+                  console.log('!!! ', channelsChecked, channelCount, ' !!! ', source.name);
+                  if (channelsChecked === channelCount) resolve(); // End once it has checked thru all channels
                 }
               });
           }
-          // Run findMessages function for the first time
+
+          // Check through text channels and active threads
           findMessages();
-        }
+          
+          // Check through archived threads
+          if (channel.isThread()) return;
+          const channelArchives = await channel.threads.fetchArchived();
+          if (channelArchives.threads.size > 0) channelArchives.threads.forEach(thread => {channelCount++; findMessages(thread);});
       });
     });
 
