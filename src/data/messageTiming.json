@@ -1,6 +1,6 @@
 {
-  "timeStarted": "2022-12-15T02:20:49.479Z",
-  "timeTomorrow": "2022-12-15T08:00:00.000Z",
-  "timer": 17580595,
-  "amountSent": 1
+  "timeStarted": 0,
+  "timeTomorrow": 0,
+  "timer": 0,
+  "amountSent": 0
 }
