@@ -1,26 +1,34 @@
+const fs = require("fs");
+
+// Data Files
+const settings = JSON.parse(fs.readFileSync("./src/data/settings.json")), // Settings (IDs & such)
+{ server, user } = settings;
+
 module.exports = {
   name: "ready",
   once: true,
-  async execute(_, client, guildID, userID) {
-    const Paradis = client.guilds.cache.get(guildID);
+  async execute(_, client) {
+    const Paradis = client.guilds.cache.get(server.guildID);
     const Bot = Paradis.members.me;
-    const Zia = await Paradis.members.fetch(userID);
-    
-    if (Bot.user.username !== Zia.user.username) 
-      client.user.setUsername(Zia.user.username)
-        .then(user => console.log('Bot username now changed from', Bot.user.username, 'to', user.username))
-        .catch(console.error);
-    
-    if (Bot.nickname !== Zia.nickname)
-      await Bot.setNickname(Zia.nickname)
-        .then(user => console.log('Bot nickname now changed from', Bot.nickname, 'to', user.nickname))
-        .catch(console.error);
-    
-    if (Bot.user.avatarURL() !== Zia.user.avatarURL()) 
-      client.user.setAvatar(Zia.user.avatarURL())
-        .then(user => console.log('Bot avatar now changed from', Bot.user.avatarURL(), 'to', user.avatarURL()))
-        .catch(console.error);
 
-    console.log(`🌺 Better Ziza woken up! Now online as "${Bot.nickname ?? Bot.user.username}"`);
+    client.user.setPresence({ status: 'invisible' });
+
+    let userData = {};
+    await Paradis.members.fetch().then((members) =>
+      members.forEach((member) => {
+        if (member.user.bot) return;
+
+        userData[member.user.id] = {
+          excited: false, // Has the bot been excited for them yet?
+          upset: 0, // How upset are they with them?
+        };
+      }));
+    
+    fs.writeFileSync(
+      "./src/data/userEmotions.json",
+      JSON.stringify(userData, null, 2)
+    );
+
+    console.log(`🌺 Better Ziza has woken up! Now online as "${Bot.nickname ?? Bot.user.username}"`)
   },
 };

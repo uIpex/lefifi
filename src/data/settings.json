@@ -1,0 +1,23 @@
+{
+  "server": {
+    "guildID": "954971803837677589",
+    "categoryID": {
+      "main": "954971803837677590",
+      "other": [
+        "1024960518756237352"
+      ]
+    },
+    "ignoredChannels": [],
+    "spoilerChannels": [
+      "1009528211098570813"
+    ],
+    "tiredStatus": false
+  },
+  "user": {
+    "userID": {
+      "main": "1052745193251667978",
+      "alt": []
+    },
+    "avatar": "https://cdn.discordapp.com/avatars/1052745193251667978/be971b7936dcd7a3c5b5841fb7e4ecfc.webp"
+  }
+}

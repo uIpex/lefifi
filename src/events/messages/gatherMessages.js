@@ -1,24 +1,31 @@
 const fs = require("fs");
 
-let ziaMessages = []; // List to store ALL of Zia's texts, attachments, & stickers (Used to mimic Zia)
+// Data Files
+const settings = JSON.parse(fs.readFileSync("./src/data/settings.json")), // Settings (IDs & such)
+{ server, user } = settings,
+topics = JSON.parse(fs.readFileSync("./src/data/topics.json")); // Topics (Keywords & IDs)
 
-const ignoreChannels = ['957629919695876207', '985374396879360091'];
+let ziaMessages = {
+  general: {},
+  aot: {},
+}; // List to store ALL of Zia's texts, attachments, & stickers (Used to mimic Zia)
 
 module.exports = {
   name: "ready",
   once: true,
-  async execute(_, client, guildID, userID, categoryID) {
-    const Paradis = client.guilds.cache.get(guildID);
+  async execute(_, client) {
+    const Paradis = client.guilds.cache.get(server.guildID);
+    const categoryID = Object.values(server.categoryID).flat();
     const channels = Paradis.channels.cache.filter(c => {
       // Ignore blacklisted channels
-      if (ignoreChannels.filter(id => id === c.id).length === 0) {
+      if (!server.ignoredChannels.includes(c.id)) {
         // Only search thru text channels and threads in a specific category
-        return (c.isTextBased() && c.parentId === categoryID) || 
-        (c.isThread() && Paradis.channels.cache.get(c.parentId).parentId === categoryID)};
+        return (c.isTextBased() && categoryID.includes(c.parentId)) || 
+        (c.isThread() && categoryID.includes(Paradis.channels.cache.get(c.parentId).parentId))};
     });
 
-    let channelsChecked = 0;
-    let channelCount = channels.size;
+    let channelCount = channels.size,
+    channelsChecked = 0;
 
     const gatherMessages = new Promise(async (resolve) => {
       channels.forEach(async (channel) => {
@@ -35,7 +42,7 @@ module.exports = {
                 // Continue listing Zia's texts till it's taken ALL the messages in a single channel
                 if (messages.size > 0) {
                   // Filters to only only Zia's texts
-                  const msgs = messages.filter((m) => m.author.id === userID || m.author.id === "667361776362323978");
+                  const msgs = messages.filter((m) => Object.values(user.userID).flat().includes(m.author.id));
 
                   // Loop through every message sent by Zia in a channel
                   msgs.forEach((m) => {
@@ -45,19 +52,18 @@ module.exports = {
                     // Skip if the message is a system type
                     if (m.system === true) return;
 
-                    // Adds all of Zia's texts into one array
-                    ziaMessages.push({
-                      ID: m.id,
-                      Content: m.content,
-                      Attachments: [...m.attachments.values()],
-                      Sticker: [...m.stickers.values()],
-                    });
+                    // Adds all of Zia's texts into one array. But first checks if it's in a specific channel to be put in a specific category
+                    ziaMessages[Object.values(topics.aot.channels).includes(m.channelId) ? 'aot' : 'general'][m.id] = {
+                      content: m.content,
+                      files: [...m.attachments.values()],
+                      stickers: [...m.stickers.values()],
+                    }
                   });
 
                   findMessages(thread, messages.last().id); // Loop till channel is dried out
                 } else {
                   channelsChecked++; // Finished checking another channel
-                  console.log('!!! ', channelsChecked, channelCount, ' !!! ', source.name);
+                  // console.log('!!! ', channelsChecked, channelCount, ' !!! ', source.name);
                   if (channelsChecked === channelCount) resolve(); // End once it has checked thru all channels
                 }
               });
@@ -80,7 +86,7 @@ module.exports = {
       JSON.stringify(ziaMessages, null, 2),
       (err) => {
         if (err) throw err;
-        console.log("! ziaMessages.json is now up to date with", ziaMessages.length, "entries !");
+        console.log("! ziaMessages.json is now up to date with", Object.entries(ziaMessages.general).length + Object.entries(ziaMessages.aot).length, "entries !");
       }
     );
   },
